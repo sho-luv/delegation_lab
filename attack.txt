@@ -1,0 +1,74 @@
+xfreerdp /u:administrator /p:'l&M43x8?uqKbVbbC;6u;&2C)bn@RQXaW' /v:18.216.193.78
+
+moosedojo.local
+
+# disabled LLMNR
+# https://infinitelogins.com/2020/11/23/disabling-llmnr-in-your-network/
+
+# asreproast attack against DC DC-01 ( 10.0.0.90) to gain local admin on APPDBCUSWS16-01
+
+	# notes:
+	# the account has doesnotrequirepreauth value set
+
+    # create account:
+    net user web.user Bambam911 /add
+
+	# add domain user to local admin group
+	net localgroup administrators moosedojo.local\web.user /ADD
+
+	Invoke-Command -ComputerName APPDBCUSWS16-01 -ScriptBlock {add-LocalGroupMember -Group "administrators" -Member web.user }
+	Invoke-Command -ComputerName APPDBCUSWS16-01 -ScriptBlock {Remove-LocalGroupMember -Group "administrators" -Member web.user }
+
+
+    # make account asreproastable by setting doesnotrequirepreauth flag:
+    powershell import-module activedirectory; Set-ADAccountControl -Identity web.user  -doesnotrequirepreauth $true
+
+    # check for asreproastable accounts: 
+    Get-ADUser -Filter 'useraccountcontrol -band 4194304' -Properties useraccountcontrol | Format-Table name
+
+# Constrained Delegation Attack - APPDBCUSWS16-01$ (10.0.0.159)
+
+	# user or computer account has TRUSTED_FOR_DELEGATION flag set 
+
+	moosedojo\justine.berries on host 10.0.0.201 (jberries-ws16)
+
+	# create system that allows constrained delegation:
+	net computer \\kyan-computer$ /add
+	
+    # add constrained delegation:
+		# add constrained delegation:
+		Set-ADComputer -Identity jberries-ws16$ -Add @{'msDS-AllowedToDelegateTo'=@('WSMAN/CoolThings','WWW/DC-01')}
+		Set-ADComputer -Identity appdbcusws16-01$ -Add @{'msDS-AllowedToDelegateTo'=@('WSMAN/CoolThings','ARADMINSVC/DC-01')}
+		Set-ADComputer -Identity matt-laptop$ -Add @{'msDS-AllowedToDelegateTo'=@('MSQL/Service','WWW/patrick-laptop')}
+		Set-ADComputer -Identity adam-ws22$ -Add @{'msDS-AllowedToDelegateTo'=@('CIFS/kevin-ws27','HOST/sholuv-laptop')}
+
+			# remove constrained delegation:
+			Set-ADComputer -Identity adam-ws22$ -Remove @{'msDS-AllowedToDelegateTo'=@('CIFS/kevin-ws27','HOST/sholuv-laptop')}
+
+		# add protocal transition (this allows the orginal auth to be done outside of kerberos ex. ntlm, aesKey, etc):
+		powershell import-module activedirectory; Set-ADAccountControl -Identity appdbcusws16-01$ -TrustedToAuthForDelegation $true
+		powershell import-module activedirectory; Set-ADAccountControl -Identity jberries-ws16$ -TrustedToAuthForDelegation $true
+		powershell import-module activedirectory; Set-ADAccountControl -Identity adam-ws22$ -TrustedToAuthForDelegation $true
+
+			# remove protocal transition:
+			powershell import-module activedirectory; Set-ADAccountControl -Identity adam-ws22$ -TrustedToAuthForDelegation $false
+
+	# add resource based constrained delegation:
+	Set-ADComputer jberries-ws16 -PrincipalsAllowedToDelegateToAccount (Get-ADComputer matt-laptop)
+	Set-ADComputer jberries-ws16 -PrincipalsAllowedToDelegateToAccount matt-laptop
+
+		# remove rbcd:
+		Set-ADComputer jberries-ws16 -PrincipalsAllowedToDelegateToAccount $null
+
+    # check for constrained delegation:
+    get-adcomputer jberries-ws16 -Properties * | Format-List -Property *delegat*,msDS-AllowedToActOnBehalfOfOtherIdentity
+    get-adcomputer jberries-ws16 -Properties * | Select-Object -ExpandProperty msDS-AllowedToActOnBehalfOfOtherIdentity |Format-List
+
+# Constrained w/ Protocol Transition with DC1 (10.0.0.90)
+
+# dcsync privs:
+# powerview
+Import-Module ActiveDirectory; (Get-Acl "ad:\dc=offense,dc=local").Access | ? {$_.IdentityReference -match 'spotless' -and ($_.ObjectType -eq "1131f6aa-9c07-11d1-f79f-00c04fc2dcd2" -or $_.ObjectType -eq "1131f6ad-9c07-11d1-f79f-00c04fc2dcd2" -or $_.ObjectType -eq "89e95b76-444d-4c62-991a-0facbeda640c" ) }
+
+https://medium.com/@jsecurity101/syncing-into-the-shadows-bbd656dd14c8
+https://www.specterops.io/assets/resources/an_ace_up_the_sleeve.pdf

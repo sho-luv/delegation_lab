@@ -1,0 +1,114 @@
+Get-ADUser -Properties * -Identity kgilstrong-adm
+
+
+AccountExpirationDate                : 
+accountExpires                       : 9223372036854775807
+AccountLockoutTime                   : 
+AccountNotDelegated                  : False
+adminCount                           : 1
+AllowReversiblePasswordEncryption    : False
+AuthenticationPolicy                 : {}
+AuthenticationPolicySilo             : {}
+BadLogonCount                        : 0
+badPasswordTime                      : 0
+badPwdCount                          : 0
+CannotChangePassword                 : False
+CanonicalName                        : moosedojo.local/Resources/Admin Users/Klein Gilstrong (Admin)
+Certificates                         : {}
+City                                 : 
+CN                                   : Klein Gilstrong (Admin)
+codePage                             : 0
+Company                              : 
+CompoundIdentitySupported            : {}
+Country                              : 
+countryCode                          : 0
+Created                              : 4/26/2021 10:00:32 AM
+createTimeStamp                      : 4/26/2021 10:00:32 AM
+Deleted                              : 
+Department                           : 
+Description                          : Klein Gilstrong Enterprise Admin
+DisplayName                          : Klein Gilstrong Admin
+DistinguishedName                    : CN=Klein Gilstrong (Admin),OU=Admin Users,OU=Resources,DC=moosedojo,DC=local
+Division                             : 
+DoesNotRequirePreAuth                : False
+dSCorePropagationData                : {4/26/2021 10:56:32 AM, 12/31/1600 7:00:00 PM}
+EmailAddress                         : 
+EmployeeID                           : 
+EmployeeNumber                       : 
+Enabled                              : True
+Fax                                  : 
+GivenName                            : Klein
+HomeDirectory                        : 
+HomedirRequired                      : False
+HomeDrive                            : 
+HomePage                             : 
+HomePhone                            : 
+Initials                             : 
+instanceType                         : 4
+isDeleted                            : 
+KerberosEncryptionType               : {}
+LastBadPasswordAttempt               : 
+LastKnownParent                      : 
+lastLogoff                           : 0
+lastLogon                            : 132641132168506830
+LastLogonDate                        : 4/26/2021 2:46:58 PM
+lastLogonTimestamp                   : 132639364189161949
+LockedOut                            : False
+logonCount                           : 20
+LogonWorkstations                    : 
+Manager                              : 
+MemberOf                             : {CN=Domain Admins,CN=Users,DC=moosedojo,DC=local, CN=Enterprise 
+                                       Admins,CN=Users,DC=moosedojo,DC=local, CN=Schema 
+                                       Admins,CN=Users,DC=moosedojo,DC=local, 
+                                       CN=Administrators,CN=Builtin,DC=moosedojo,DC=local}
+MNSLogonAccount                      : False
+MobilePhone                          : 
+Modified                             : 4/26/2021 2:46:58 PM
+modifyTimeStamp                      : 4/26/2021 2:46:58 PM
+msDS-User-Account-Control-Computed   : 0
+Name                                 : Klein Gilstrong (Admin)
+nTSecurityDescriptor                 : System.DirectoryServices.ActiveDirectorySecurity
+ObjectCategory                       : CN=Person,CN=Schema,CN=Configuration,DC=moosedojo,DC=local
+ObjectClass                          : user
+ObjectGUID                           : b8ec91a1-8bf7-4e13-9f3b-0306cf347b30
+objectSid                            : S-1-5-21-3536346550-1638972285-620573780-1111
+Office                               : 
+OfficePhone                          : 
+Organization                         : 
+OtherName                            : 
+PasswordExpired                      : False
+PasswordLastSet                      : 4/26/2021 10:00:32 AM
+PasswordNeverExpires                 : True
+PasswordNotRequired                  : False
+POBox                                : 
+PostalCode                           : 
+PrimaryGroup                         : CN=Domain Users,CN=Users,DC=moosedojo,DC=local
+primaryGroupID                       : 513
+PrincipalsAllowedToDelegateToAccount : {}
+ProfilePath                          : 
+ProtectedFromAccidentalDeletion      : False
+pwdLastSet                           : 132639192321168725
+SamAccountName                       : kgilstrong-adm
+sAMAccountType                       : 805306368
+ScriptPath                           : 
+sDRightsEffective                    : 15
+ServicePrincipalNames                : {}
+SID                                  : S-1-5-21-3536346550-1638972285-620573780-1111
+SIDHistory                           : {}
+SmartcardLogonRequired               : False
+sn                                   : Gilstrong EA DA
+State                                : 
+StreetAddress                        : 
+Surname                              : Gilstrong EA DA
+Title                                : 
+TrustedForDelegation                 : False
+TrustedToAuthForDelegation           : False
+UseDESKeyOnly                        : False
+userAccountControl                   : 66048
+userCertificate                      : {}
+UserPrincipalName                    : kgilstrong-adm@moosedojo.local
+uSNChanged                           : 16453
+uSNCreated                           : 12840
+whenChanged                          : 4/26/2021 2:46:58 PM
+whenCreated                          : 4/26/2021 10:00:32 AM
+

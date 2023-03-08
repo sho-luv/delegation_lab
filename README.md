@@ -1,2 +1,3 @@
-# delegation_lab
-This is a lab I built do test delegation attacks
+# RedTeam Lab
+
+I did some stuff.

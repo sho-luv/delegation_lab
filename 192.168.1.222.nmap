@@ -1,0 +1,27 @@
+nmap -sV 192.168.1.222
+Starting Nmap 7.80 ( https://nmap.org ) at 2021-04-20 21:42 PDT
+Nmap scan report for sholuv.local (192.168.1.222)
+Host is up (0.00033s latency).
+Not shown: 989 filtered ports
+PORT     STATE SERVICE       VERSION
+53/tcp   open  domain?
+88/tcp   open  kerberos-sec  Microsoft Windows Kerberos (server time: 2021-04-21 04:42:56Z)
+135/tcp  open  msrpc         Microsoft Windows RPC
+139/tcp  open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: sholuv.local0., Site: Default-First-Site-Name)
+445/tcp  open  microsoft-ds?
+464/tcp  open  kpasswd5?
+593/tcp  open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp  open  tcpwrapped
+3268/tcp open  ldap          Microsoft Windows Active Directory LDAP (Domain: sholuv.local0., Site: Default-First-Site-Name)
+3269/tcp open  tcpwrapped
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port53-TCP:V=7.80%I=7%D=4/20%Time=607FAD55%P=x86_64-pc-linux-gnu%r(DNSV
+SF:ersionBindReqTCP,20,"\0\x1e\0\x06\x81\x04\0\x01\0\0\0\0\0\0\x07version\
+SF:x04bind\0\0\x10\0\x03");
+MAC Address: 00:0C:29:FE:52:FE (VMware)
+Service Info: Host: WIN-4K6AI0OL89J; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 147.37 seconds
+

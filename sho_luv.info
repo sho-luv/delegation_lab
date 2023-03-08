@@ -1,0 +1,113 @@
+Get-ADUser -Properties * -Identity sho_luv
+
+
+AccountExpirationDate                : 
+accountExpires                       : 0
+AccountLockoutTime                   : 
+AccountNotDelegated                  : False
+adminCount                           : 1
+AllowReversiblePasswordEncryption    : False
+AuthenticationPolicy                 : {}
+AuthenticationPolicySilo             : {}
+BadLogonCount                        : 0
+badPasswordTime                      : 132639809140809871
+badPwdCount                          : 0
+CannotChangePassword                 : False
+CanonicalName                        : sholuv.local/Users/sho_luv
+Certificates                         : {}
+City                                 : 
+CN                                   : sho_luv
+codePage                             : 1252
+Company                              : 
+CompoundIdentitySupported            : {}
+Country                              : 
+countryCode                          : 1
+Created                              : 4/19/2021 10:40:55 PM
+createTimeStamp                      : 4/19/2021 10:40:55 PM
+Deleted                              : 
+Department                           : 
+Description                          : 
+DisplayName                          : 
+DistinguishedName                    : CN=sho_luv,CN=Users,DC=sholuv,DC=local
+Division                             : 
+DoesNotRequirePreAuth                : False
+dSCorePropagationData                : {4/19/2021 10:57:01 PM, 4/19/2021 10:41:51 PM, 12/31/1600 4:04:16 PM}
+EmailAddress                         : 
+EmployeeID                           : 
+EmployeeNumber                       : 
+Enabled                              : True
+Fax                                  : 
+GivenName                            : 
+HomeDirectory                        : 
+HomedirRequired                      : False
+HomeDrive                            : 
+HomePage                             : 
+HomePhone                            : 
+Initials                             : 
+instanceType                         : 4
+isDeleted                            : 
+KerberosEncryptionType               : {}
+LastBadPasswordAttempt               : 4/27/2021 12:08:34 AM
+LastKnownParent                      : 
+lastLogoff                           : 0
+lastLogon                            : 132641217629204982
+LastLogonDate                        : 4/20/2021 12:01:23 AM
+lastLogonTimestamp                   : 132633756832558977
+LockedOut                            : False
+logonCount                           : 17
+logonHours                           : {255, 255, 255, 255...}
+LogonWorkstations                    : 
+Manager                              : 
+MemberOf                             : {CN=Users,CN=Builtin,DC=sholuv,DC=local, 
+                                       CN=Administrators,CN=Builtin,DC=sholuv,DC=local}
+MNSLogonAccount                      : False
+MobilePhone                          : 
+Modified                             : 4/21/2021 2:32:03 PM
+modifyTimeStamp                      : 4/21/2021 2:32:03 PM
+msDS-User-Account-Control-Computed   : 0
+Name                                 : sho_luv
+nTSecurityDescriptor                 : System.DirectoryServices.ActiveDirectorySecurity
+ObjectCategory                       : CN=Person,CN=Schema,CN=Configuration,DC=sholuv,DC=local
+ObjectClass                          : user
+ObjectGUID                           : cf98e798-d457-48e1-bc5b-fae08c3ee443
+objectSid                            : S-1-5-21-1366437015-4139103215-3783103081-1000
+Office                               : 
+OfficePhone                          : 
+Organization                         : 
+OtherName                            : 
+PasswordExpired                      : False
+PasswordLastSet                      : 3/24/2021 12:41:32 PM
+PasswordNeverExpires                 : False
+PasswordNotRequired                  : False
+POBox                                : 
+PostalCode                           : 
+PrimaryGroup                         : CN=Domain Users,CN=Users,DC=sholuv,DC=local
+primaryGroupID                       : 513
+PrincipalsAllowedToDelegateToAccount : {}
+ProfilePath                          : 
+ProtectedFromAccidentalDeletion      : False
+pwdLastSet                           : 132610884925761859
+SamAccountName                       : sho_luv
+sAMAccountType                       : 805306368
+ScriptPath                           : 
+sDRightsEffective                    : 15
+servicePrincipalName                 : {CIFS/WhatIsThis}
+ServicePrincipalNames                : {CIFS/WhatIsThis}
+SID                                  : S-1-5-21-1366437015-4139103215-3783103081-1000
+SIDHistory                           : {}
+SmartcardLogonRequired               : False
+State                                : 
+StreetAddress                        : 
+Surname                              : 
+Title                                : 
+TrustedForDelegation                 : False
+TrustedToAuthForDelegation           : False
+UseDESKeyOnly                        : False
+userAccountControl                   : 512
+userCertificate                      : {}
+UserPrincipalName                    : 
+uSNChanged                           : 20599
+uSNCreated                           : 8198
+whenChanged                          : 4/21/2021 2:32:03 PM
+whenCreated                          : 4/19/2021 10:40:55 PM
+

